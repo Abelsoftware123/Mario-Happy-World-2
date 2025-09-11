@@ -6,7 +6,7 @@ html, body, ul, li {
 
 canvas {
   display: block;
-  width: 762;
+  width: 762px;
   margin: 0 auto;
   background-color: blue;
 }
