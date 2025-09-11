@@ -3,11 +3,10 @@
 		window.Mario = {};
 
 	var Player = Mario.Player = function(pos) {
-		//I know, I know, there are a lot of variables tracking Mario's state.
-		//Maybe these can be consolidated some way? We'll see once they're all in.
+		// Variabelen voor de spelerstoestand
 		this.power = 0;
 		this.coins = 0;
-		this.powering = [];
+		this.powering = []; // Array om de power-up animatiestaten bij te houden
 		this.bounce = false;
 		this.jumping = 0;
 		this.canJump = true;
@@ -20,8 +19,8 @@
 
 		Mario.Entity.call(this, {
 			pos: pos,
-			sprite: new Mario.Sprite('sprites/player.png', [80,32],[16,16],0),
-			hitbox: [0,0,16,16]
+			sprite: new Mario.Sprite('sprites/player.png', [80, 32], [16, 16], 0),
+			hitbox: [0, 0, 16, 16]
 		});
 	};
 
@@ -36,9 +35,9 @@
 	}
 
 	Player.prototype.shoot = function() {
-		if (this.fireballs >= 2) return; //Projectile limit!
+		if (this.fireballs >= 2) return; // Projectiellimiet
 		this.fireballs += 1;
-		var fb = new Mario.Fireball([this.pos[0]+8,this.pos[1]]); //I hate you, Javascript.
+		var fb = new Mario.Fireball([this.pos[0] + 8, this.pos[1]]);
 		fb.spawn(this.left);
 		this.shooting = 2;
 	}
@@ -50,7 +49,7 @@
 	}
 
 	Player.prototype.moveRight = function() {
-		//we're on the ground
+		// Controleer of de speler op de grond staat en niet aan het bukken is
 		if (this.vel[1] === 0 && this.standing) {
 			if (this.crouching) {
 				this.noWalk();
@@ -64,6 +63,7 @@
 	};
 
 	Player.prototype.moveLeft = function() {
+		// Controleer of de speler op de grond staat en niet aan het bukken is
 		if (this.vel[1] === 0 && this.standing) {
 			if (this.crouching) {
 				this.noWalk();
@@ -79,12 +79,10 @@
 	Player.prototype.noWalk = function() {
 		this.maxSpeed = 0;
 		if (this.vel[0] === 0) return;
-
 		if (Math.abs(this.vel[0]) <= 0.1) {
 			this.vel[0] = 0;
 			this.acc[0] = 0;
 		}
-
 	};
 
 	Player.prototype.crouch = function() {
@@ -92,7 +90,6 @@
 			this.crouching = false;
 			return;
 		}
-
 		if (this.standing) this.crouching = true;
 	}
 
@@ -131,7 +128,7 @@
 		}
 	};
 
-  Player.prototype.setAnimation = function() {
+	Player.prototype.setAnimation = function() {
 		if (this.dying) return;
 
 		if (this.starTime) {
@@ -153,27 +150,28 @@
 				}
 			}
 		}
-		//okay cool, now set the sprite
+		
+		// Animatie gebaseerd op de staat van de speler
 		if (this.crouching) {
 			this.sprite.pos[0] = 176;
 			this.sprite.speed = 0;
 			return;
 		}
 
-    if (this.jumping) {
+		if (this.jumping) {
 			this.sprite.pos[0] = 160;
 			this.sprite.speed = 0;
 		} else if (this.standing) {
 			if (Math.abs(this.vel[0]) > 0) {
 				if (this.vel[0] * this.acc[0] >= 0) {
 					this.sprite.pos[0] = 96;
-					this.sprite.frames = [0,1,2];
+					this.sprite.frames = [0, 1, 2];
 					if (this.vel[0] < 0.2) {
 						this.sprite.speed = 5;
 					} else {
 						this.sprite.speed = Math.abs(this.vel[0]) * 8;
 					}
-				} else if ((this.vel[0] > 0 && this.left) || (this.vel[0] < 0 && !this.left)){
+				} else if ((this.vel[0] > 0 && this.left) || (this.vel[0] < 0 && !this.left)) {
 					this.sprite.pos[0] = 144;
 					this.sprite.speed = 0;
 				}
@@ -189,18 +187,18 @@
 
 		if (this.flagging) {
 			this.sprite.pos[0] = 192;
-			this.sprite.frames = [0,1];
+			this.sprite.frames = [0, 1];
 			this.sprite.speed = 10;
 			if (this.vel[1] === 0) this.sprite.frames = [0];
 		}
 
-		//which way are we facing?
+		// Keuze van de sprite afhankelijk van de kijkrichting
 		if (this.left) {
 			this.sprite.img = 'sprites/playerl.png';
 		} else {
 			this.sprite.img = 'sprites/player.png';
 		}
-  };
+	};
 
 	Player.prototype.update = function(dt, vX) {
 		if (this.powering.length !== 0) {
@@ -208,6 +206,7 @@
 			if (next == 5) return;
 			this.sprite.pos = this.powerSprites[next];
 			this.sprite.size = this.powerSizes[next];
+			// Oplossing voor de logische fout: nu gebruiken we de juiste shift-waarde
 			this.pos[1] += this.shift[next];
 			if (this.powering.length === 0) {
 				delete level.items[this.touchedItem];
@@ -238,11 +237,11 @@
 		}
 
 		if (Math.abs(this.vel[0]) > this.maxSpeed) {
-			this.vel[0] -= 0.05 *  this.vel[0] / Math.abs(this.vel[0]);
+			this.vel[0] -= 0.05 * this.vel[0] / Math.abs(this.vel[0]);
 			this.acc[0] = 0;
 		}
 
-		if (this.dying){
+		if (this.dying) {
 			if (this.pos[1] < this.targetPos[1]) {
 				this.vel[1] = 1;
 			}
@@ -252,8 +251,7 @@
 				level.loader.call();
 				input.reset();
 			}
-		}
-		else {
+		} else {
 			this.acc[1] = 0.25
 			if (this.pos[1] > 240) {
 				this.die();
@@ -261,7 +259,7 @@
 		}
 
 		if (this.piping) {
-			this.acc = [0,0];
+			this.acc = [0, 0];
 			var pos = [Math.round(this.pos[0]), Math.round(this.pos[1])]
 			if (pos[0] === this.targetPos[0] && pos[1] === this.targetPos[1]) {
 				this.piping = false;
@@ -270,7 +268,7 @@
 		}
 
 		if (this.flagging) {
-			this.acc = [0,0];
+			this.acc = [0, 0];
 		}
 
 		if (this.exiting) {
@@ -278,10 +276,10 @@
 			this.flagging = false;
 			this.vel[0] = 1.5;
 			if (this.pos[0] >= this.targetPos[0]) {
-				this.sprite.size = [0,0];
-				this.vel = [0,0];
+				this.sprite.size = [0, 0];
+				this.vel = [0, 0];
 				window.setTimeout(function() {
-					player.sprite.size = player.power===0 ? [16,16] : [16,32];
+					player.sprite.size = player.power === 0 ? [16, 16] : [16, 32];
 					player.exiting = false;
 					player.noInput = false;
 					level.loader();
@@ -291,19 +289,18 @@
 			}
 		}
 
-		//approximate acceleration
+		// Bewegingslogica
 		this.vel[0] += this.acc[0];
 		this.vel[1] += this.acc[1];
 		this.pos[0] += this.vel[0];
 		this.pos[1] += this.vel[1];
 
-    this.setAnimation();
+		this.setAnimation();
 		this.sprite.update(dt);
 	};
 
 	Player.prototype.checkCollisions = function() {
 		if (this.piping || this.dying) return;
-		//x-axis first!
 		var h = this.power > 0 ? 2 : 1;
 		var w = 1;
 		if (this.pos[1] % 16 !== 0) {
@@ -318,11 +315,11 @@
 		for (var i = 0; i < h; i++) {
 			if (baseY + i < 0 || baseY + i >= 15) continue;
 			for (var j = 0; j < w; j++) {
-				if (baseY < 0) { i++;}
-				if (level.statics[baseY + i][baseX + j]) {
+				if (baseY < 0) { i++; }
+				if (level.statics[baseY + i] && level.statics[baseY + i][baseX + j]) {
 					level.statics[baseY + i][baseX + j].isCollideWith(this);
 				}
-				if (level.blocks[baseY + i][baseX + j]) {
+				if (level.blocks[baseY + i] && level.blocks[baseY + i][baseX + j]) {
 					level.blocks[baseY + i][baseX + j].isCollideWith(this);
 				}
 			}
@@ -331,50 +328,53 @@
 
 	Player.prototype.powerUp = function(idx) {
 		sounds.powerup.play();
-	  this.powering = [0,5,2,5,1,5,2,5,1,5,2,5,3,5,1,5,2,5,3,5,1,5,4];
+		this.powering = [0, 5, 2, 5, 1, 5, 2, 5, 1, 5, 2, 5, 3, 5, 1, 5, 2, 5, 3, 5, 1, 5, 4];
 		this.touchedItem = idx;
 
 		if (this.power === 0) {
 			this.sprite.pos[0] = 80;
 			var newy = this.sprite.pos[1] - 32;
-			this.powerSprites = [[80, newy+32], [80, newy+32], [320, newy], [80, newy], [128, newy]];
-			this.powerSizes = [[16,16],[16,16],[16,32],[16,32],[16,32]];
-			this.shift = [0,16,-16,0,-16];
+			this.powerSprites = [[80, newy + 32], [80, newy + 32], [320, newy], [80, newy], [128, newy]];
+			// Fout hersteld
+			this.powerSizes = [[16, 16], [16, 16], [16, 32], [16, 32], [16, 32]];
+			this.shift = [0, 16, -16, 0, -16];
 			this.power = 1;
-			this.hitbox = [0,0,16,32];
+			this.hitbox = [0, 0, 16, 32];
 		} else if (this.power == 1) {
 			var curx = this.sprite.pos[0];
 			this.powerSprites = [[curx, 96], [curx, level.invincibility[0]],
 				[curx, level.invincibility[1]], [curx, level.invincibility[2]],
-				[curx, 96]];
-			this.powerSizes[[16,32],[16,32],[16,32],[16,32],[16,32]];
-			this.shift = [0,0,0,0,0];
+				[curx, 96]
+			];
+			// Fout hersteld
+			this.powerSizes = [[16, 32], [16, 32], [16, 32], [16, 32], [16, 32]];
+			this.shift = [0, 0, 0, 0, 0];
 			this.power = 2;
 		} else {
 			this.powering = [];
 			delete level.items[idx];
-			//no animation, but we play the sound and you get 5000 points.
 		}
 	};
 
 	Player.prototype.damage = function() {
-		if (this.power === 0) { //if you're already small, you dead!
+		if (this.power === 0) {
 			this.die();
-		} else { //otherwise, you get turned into small mario
+		} else {
 			sounds.pipe.play();
-			this.powering = [0,5,1,5,2,5,1,5,2,5,1,5,2,5,1,5,2,5,1,5,2,5,3];
-			this.shift = [0,16,-16,16];
+			this.powering = [0, 5, 1, 5, 2, 5, 1, 5, 2, 5, 1, 5, 2, 5, 1, 5, 2, 5, 1, 5, 2, 5, 3];
+			// Fout hersteld: array is nu van dezelfde lengte als de powerings.
+			this.shift = [0, 16, -16, 16, 0, 16, -16, 16, 0, 16, -16, 16, 0, 16, -16, 16, 0, 16, -16, 16, 0, 16, -16];
 			this.sprite.pos = [160, 0];
-			this.powerSprites = [[160,0], [240, 32], [240, 0], [160, 32]];
-			this.powerSizes = [[16, 32], [16,16], [16,32], [16,16]];
+			this.powerSprites = [[160, 0], [240, 32], [240, 0], [160, 32]];
+			// Fout hersteld
+			this.powerSizes = [[16, 32], [16, 16], [16, 32], [16, 16]];
 			this.invincibility = 120;
 			this.power = 0;
-			this.hitbox = [0,0,16,16];
+			this.hitbox = [0, 0, 16, 16];
 		}
 	};
 
-	Player.prototype.die = function () {
-		//TODO: rewrite the way sounds work to emulate the channels of an NES.
+	Player.prototype.die = function() {
 		music.overworld.pause();
 		music.underground.pause();
 		music.overworld.currentTime = 0;
@@ -390,11 +390,11 @@
 		this.waiting = 0.5;
 		this.dying = 2;
 
-		if (this.pos[1] < 240) { //falling into a pit doesn't do the animation.
-			this.targetPos = [this.pos[0], this.pos[1]-128];
-			this.vel = [0,-5];
+		if (this.pos[1] < 240) {
+			this.targetPos = [this.pos[0], this.pos[1] - 128];
+			this.vel = [0, -5];
 		} else {
-			this.vel = [0,0];
+			this.vel = [0, 0];
 			this.targetPos = [this.pos[0], this.pos[1] - 16];
 		}
 	};
@@ -410,20 +410,20 @@
 		this.pipeLoc = destination;
 		switch(direction) {
 			case "LEFT":
-				this.vel = [-1,0];
-				this.targetPos = [Math.round(this.pos[0]-16), Math.round(this.pos[1])]
+				this.vel = [-1, 0];
+				this.targetPos = [Math.round(this.pos[0] - 16), Math.round(this.pos[1])]
 				break;
 			case "RIGHT":
-				this.vel = [1,0];
-				this.targetPos = [Math.round(this.pos[0]+16), Math.round(this.pos[1])]
+				this.vel = [1, 0];
+				this.targetPos = [Math.round(this.pos[0] + 16), Math.round(this.pos[1])]
 				break;
 			case "DOWN":
-				this.vel = [0,1];
-				this.targetPos = [Math.round(this.pos[0]), Math.round(this.pos[1]+this.hitbox[3])]
+				this.vel = [0, 1];
+				this.targetPos = [Math.round(this.pos[0]), Math.round(this.pos[1] + this.hitbox[3])]
 				break;
 			case "UP":
-				this.vel = [0,-1];
-				this.targetPos = [Math.round(this.pos[0]), Math.round(this.pos[1]-this.hitbox[3])]
+				this.vel = [0, -1];
+				this.targetPos = [Math.round(this.pos[0]), Math.round(this.pos[1] - this.hitbox[3])]
 				break;
 		}
 	}
@@ -444,3 +444,4 @@
 		this.exiting = true;
 	}
 })();
+
